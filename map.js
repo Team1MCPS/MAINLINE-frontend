@@ -2,6 +2,29 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
+  let mqtt;
+  let host = "localhost";
+  let port = 9001;
+
+function onConnect () {
+    console.log("Connected");
+    mqtt.subscribe("sensor1");
+    message = new Paho.MQTT.Message("Hello World", retained=true);
+    message.destinationName = "sensor1";
+    mqtt.send(message);
+    console.log("I've arrived here");
+}
+
+function MQTTconnect() {
+    console.log("connecting to " + host + " port " + port);
+    mqtt = new Paho.MQTT.Client(host, port, "", "clientjs");
+    let options = {
+        timeout: 3,
+        onSuccess: onConnect
+    };
+    mqtt.connect(options);
+}
+
 async function populateMap() {
     var mymap = L.map('mapid').setView([43.7696, 11.2558], 13);
     L.tileLayer("https://a.tile.openstreetmap.org/{z}/{x}/{y}.png",
