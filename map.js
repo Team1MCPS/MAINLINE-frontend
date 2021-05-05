@@ -1,12 +1,41 @@
-
 let mqtt;
 let host = "localhost";
 let port = 9001;
 
+// Bus stops and its coordinates
+let stops = [
+    {
+        "id": 1,
+        "x": 43.1696,
+        "y": 11.2558
+    },
+    {
+        "id": 2,
+        "x": 43.8696,
+        "y": 11.3558
+    }
+];
+
+// Map variables
+var marker;
+var popup;
+var busIcon;
+var mymap;
+
+
+// Returns the searched bus stop
+function searchBusStop(id) {
+    for (var i=0; i<stops.length; i++) {
+        if (stops[i].id == id) return stops[i];
+    }
+    return null;
+}
+
+
 // on a successful connection the frontend subscribes to bus1 topic
 function onConnect () {
     console.log("Connected");
-    mqtt.subscribe("bus1");
+    mqtt.subscribe("line1/bus1");
     // message = new Paho.MQTT.Message("Hello World", retained=true);
     // message.destinationName = "sensor1";
     // mqtt.send(message);
@@ -16,8 +45,29 @@ function onConnect () {
 // callback when a message arrives
 function onMessageArrived(message) {
     console.log("onMessageArrived:"+message.payloadString);
-    let msg = JSON.parse(message.payloadString);
-    console.log(msg.test);
+    try {
+        var msg = JSON.parse(message.payloadString);
+        id = msg.s;
+        delta = msg.d;
+        console.log("delta:"+delta);
+        console.log("stop:"+id);
+        var stop = searchBusStop(id);
+        if (stop) {
+            var dest = [stop.x, stop.y];
+            popup = "<center> Passenger difference compared to the previous stop: " + delta + "</center>";
+            marker.bindPopup(popup).openPopup();
+            marker.bindTooltip('Bus Line 1');
+            marker.slideTo(dest, {
+                duration: 4000,
+                keepAtCenter: true
+            });
+        }
+        else {
+            console.log("Unknown stop");
+        }
+    } catch(e) {
+        console.log(e); // error in the above string (in this case, yes)!
+    }
 }
 
 // on failure try to reconnect to mqtt after a while
@@ -42,7 +92,7 @@ function MQTTconnect() {
 
 // used to populate the map
 async function populateMap() {
-    var mymap = L.map('mapid').setView([43.7696, 11.2558], 13);
+    mymap = L.map('mapid').setView([43.7696, 11.2558], 13);
     L.tileLayer("https://a.tile.openstreetmap.org/{z}/{x}/{y}.png",
         {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
@@ -50,7 +100,7 @@ async function populateMap() {
             minZoom: 13
         }).addTo(mymap);
 
-    var busIcon = L.icon({
+    busIcon = L.icon({
         iconUrl: 'images/bus_icon.png',
     
         iconSize:     [50, 50], // size of the icon
@@ -58,16 +108,18 @@ async function populateMap() {
         popupAnchor:  [0, -20] // point from which the popup should open relative to the iconAnchor
     });
 
+
     // example marker
-    var marker = L.marker([43.7696, 11.2558], {icon: busIcon});
+    marker = L.marker([43.7696, 11.2558], {icon: busIcon});
 
     // add some text to the popup
-    let popup = '<center>here we can show the numbers relative to this bus</center>'
+    popup = '<center>here we can show the numbers relative to this bus</center>'
     
     marker.bindPopup(popup).openPopup();
     marker.bindTooltip('Bus Line');
     marker.addTo(mymap);
 
+    /*
     let origin = [43.7696, 11.2558];
     let dest = [43.8696, 11.3558];
 
@@ -86,6 +138,7 @@ async function populateMap() {
             keepAtCenter: true
         });
     }, 12000);
+    */
 
 
 }
