@@ -1,18 +1,34 @@
 let mqtt;
 let host = "localhost";
 let port = 9001;
+let busCapacity = 60;
 
 // Bus stops and its coordinates
 let stops = [
+    
     {
         "id": 1,
-        "x": 43.1696,
-        "y": 11.2558
+        "name": "Stazione Santa Maria Novella",
+        "x": 43.77644,
+        "y": 11.24929
     },
     {
         "id": 2,
-        "x": 43.8696,
-        "y": 11.3558
+        "name": "Piazzale Michelangelo",
+        "x": 43.7625,
+        "y": 11.265
+    },
+    {
+        "id": 3,
+        "name":"Sound System Studio",
+        "x": 43.77269,
+        "y": 11.28642
+    },
+    {
+        "id": 4,
+        "name": "Biblioteca del Palagio",
+        "x": 43.76977,
+        "y": 11.25398
     }
 ];
 
@@ -36,10 +52,6 @@ function searchBusStop(id) {
 function onConnect () {
     console.log("Connected");
     mqtt.subscribe("line1/bus1");
-    // message = new Paho.MQTT.Message("Hello World", retained=true);
-    // message.destinationName = "sensor1";
-    // mqtt.send(message);
-    // console.log("I've arrived here");
 }
 
 // callback when a message arrives
@@ -53,8 +65,10 @@ function onMessageArrived(message) {
         console.log("stop:"+id);
         var stop = searchBusStop(id);
         if (stop) {
+            // updates bus capacity
+            busCapacity = busCapacity - delta;
             var dest = [stop.x, stop.y];
-            popup = "<center> Passenger difference compared to the previous stop: " + delta + "</center>";
+            popup = "<center>" + stop.name + ", Bus capacity: " + busCapacity + "</center>";
             marker.bindPopup(popup).openPopup();
             marker.bindTooltip('Bus Line 1');
             marker.slideTo(dest, {
@@ -108,37 +122,18 @@ async function populateMap() {
         popupAnchor:  [0, -20] // point from which the popup should open relative to the iconAnchor
     });
 
+    // starts from the first stop
+    var stop = stops[0];
 
     // example marker
-    marker = L.marker([43.7696, 11.2558], {icon: busIcon});
+    marker = L.marker([stop.x, stop.y], {icon: busIcon});
 
     // add some text to the popup
-    popup = '<center>here we can show the numbers relative to this bus</center>'
+    popup = "<center>" + stop.name + ", Bus capacity: " + busCapacity + "</center>";
     
     marker.bindPopup(popup).openPopup();
     marker.bindTooltip('Bus Line');
     marker.addTo(mymap);
-
-    /*
-    let origin = [43.7696, 11.2558];
-    let dest = [43.8696, 11.3558];
-
-
-    // just for testing purposes
-    setInterval(async function() {
-        marker.slideTo(dest, {
-            duration: 4000,
-            keepAtCenter: true
-        });
-    }, 6000);
-
-    setInterval(async function() {
-        marker.slideTo(origin, {
-            duration: 4000,
-            keepAtCenter: true
-        });
-    }, 12000);
-    */
 
 
 }
