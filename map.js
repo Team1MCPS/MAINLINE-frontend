@@ -1,7 +1,8 @@
 let mqtt;
 let host = "localhost";
 let port = 9001;
-let busCapacity = 60;
+let busCapacity = 50;
+let busOccupation = 25;
 
 // Bus stops and its coordinates
 let stops = [
@@ -66,9 +67,9 @@ function onMessageArrived(message) {
         var stop = searchBusStop(id);
         if (stop) {
             // updates bus capacity
-            busCapacity = busCapacity - delta;
+            busOccupation = busOccupation + delta;
             var dest = [stop.x, stop.y];
-            popup = "<center>" + stop.name + ", Bus capacity: " + busCapacity + "</center>";
+            popup = "<center>" + stop.name + ", Bus occupation: " + busOccupation + "/" + busCapacity + "</center>";
             marker.bindPopup(popup).openPopup();
             marker.bindTooltip('Bus Line 1');
             marker.slideTo(dest, {
@@ -129,7 +130,7 @@ async function populateMap() {
     marker = L.marker([stop.x, stop.y], {icon: busIcon});
 
     // add some text to the popup
-    popup = "<center>" + stop.name + ", Bus capacity: " + busCapacity + "</center>";
+    popup = "<center>" + stop.name + ", Bus occupation: " + busOccupation + "/" + busCapacity + "</center>";
     
     marker.bindPopup(popup).openPopup();
     marker.bindTooltip('Bus Line');
