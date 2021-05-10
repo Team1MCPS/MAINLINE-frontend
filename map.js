@@ -59,17 +59,22 @@ function onConnect () {
 function onMessageArrived(message) {
     console.log("onMessageArrived:"+message.payloadString);
     try {
+        // parse JSON string
         var msg = JSON.parse(message.payloadString);
+        // get infos from the message
         id = msg.s;
         delta = msg.d;
         console.log("delta:"+delta);
         console.log("stop:"+id);
+        // get the actual bus stop
         var stop = searchBusStop(id);
         if (stop) {
-            // updates bus capacity
+            // update bus capacity
             busOccupation = busOccupation + delta;
             var dest = [stop.x, stop.y];
+            // update popup
             popup = "<center>" + stop.name + ", Bus occupation: " + busOccupation + "/" + busCapacity + "</center>";
+            // slide to new bus stop
             marker.bindPopup(popup).openPopup();
             marker.bindTooltip('Bus Line 1');
             marker.slideTo(dest, {
